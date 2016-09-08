@@ -200,7 +200,7 @@ func (c *Config) loadStruct(v reflect.Value) error {
 }
 
 func (c *Config) loadSecOpt(f reflect.Value, sec string, opt string) error {
-	fmt.Printf("loadSecOpt %s-%s\n", sec, opt)
+
 	switch f.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return c.loadFieldInt(f, sec, opt)
@@ -274,12 +274,12 @@ func (c *Config) transvalue(kind reflect.Kind, v string) (reflect.Value, error) 
 	return reflect.ValueOf(nil), ErrUnsupportedType
 }
 func (c *Config) loadFieldSlice(f reflect.Value, sec string, opt string) error {
-	fmt.Printf("loadFieldSlice %s-%s\n", sec, opt)
+
 	v, err := c.String(sec, opt)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("loadFieldSlice  %v ,%s-%s value:%s\n", f.Type(), sec, opt, v)
+
 	e := f.Type().Elem()
 	ss := strings.Split(v, ",")
 	newv := reflect.MakeSlice(f.Type(), len(ss), len(ss))
