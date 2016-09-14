@@ -26,6 +26,7 @@ const (
 	tmpFilename    = "testdata/__test.go"
 	sourceFilename = "testdata/source.cfg"
 	targetFilename = "testdata/target.cfg"
+	mapFilename    = "testdata/map.cfg"
 )
 
 func testGet(t *testing.T, c *Config, section string, option string,
@@ -397,4 +398,33 @@ func TestMerge(t *testing.T) {
 	if result, _ := target.String("X", "x.four"); result != "x4" {
 		t.Errorf("Expected '[X] x.four' to be 'x4' but instead it was '%s'", result)
 	}
+}
+func Load_conf(fn string, c interface{}) error {
+
+	cfg, err := ReadDefault(fn)
+	if err != nil {
+		return err
+	}
+
+	err = cfg.ParseConf(c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func TestParseMap(t *testing.T) {
+	type Tconf struct {
+		Host   string            `config:"rabbit-host"`
+		Rabbit map[string]string `config:"rabbit"`
+		Debug  map[string]int    `config:"debug"`
+	}
+	conf := new(Tconf)
+	err := Load_conf(mapFilename, conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(conf)
 }

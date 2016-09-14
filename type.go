@@ -187,7 +187,7 @@ func (c *Config) loadStruct(v reflect.Value) error {
 	for i := 0; i < n; i++ {
 		sec, opt := fieldName(t.Field(i))
 
-		if sec == "" || opt == "" {
+		if sec == "" {
 			continue
 		}
 		f := v.Field(i)
@@ -214,6 +214,8 @@ func (c *Config) loadSecOpt(f reflect.Value, sec string, opt string) error {
 		return c.loadFieldBool(f, sec, opt)
 	case reflect.Slice:
 		return c.loadFieldSlice(f, sec, opt)
+	case reflect.Map:
+		return c.loadFieldMap(f, sec, opt)
 	default:
 		return errors.New(fmt.Sprintf("unsupported type:[%s-%s]: %s", sec, opt, f.Kind()))
 	}
@@ -293,6 +295,31 @@ func (c *Config) loadFieldSlice(f reflect.Value, sec string, opt string) error {
 	f.Set(newv)
 	return nil
 }
+func (c *Config) loadFieldMap(f reflect.Value, sec string, opt string) error {
+
+	opts, err := c.Options(sec)
+	if err != nil {
+		return err
+	}
+	fmt.Printf(" %s %v %v", sec, f.IsNil(), f.CanSet())
+	//e := f.Type().Elem()
+
+	newv := reflect.MakeMap(f.Type())
+	e := newv.Type().Elem()
+	for i := 0; i < len(opts); i++ {
+		optv, err := c.String(sec, opts[i])
+		if err != nil {
+			return err
+		}
+		v, err := c.transvalue(e.Kind(), optv)
+		if err != nil {
+			return err
+		}
+		newv.SetMapIndex(reflect.ValueOf(opts[i]), v)
+	}
+	f.Set(newv)
+	return nil
+}
 
 func (c *Config) loadFieldString(f reflect.Value, sec string, opt string) error {
 
@@ -313,9 +340,10 @@ func fieldName(f reflect.StructField) (string, string) {
 			return "", ""
 		}
 		tagParts := strings.Split(tag, "-")
-		if len(tagParts) >= 1 {
+		if len(tagParts) > 1 {
 			return strings.TrimSpace(tagParts[0]), strings.TrimSpace(tagParts[1])
 		}
+		return strings.TrimSpace(tagParts[0]), ""
 	}
 	return "", ""
 }
